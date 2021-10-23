@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { Contact } from './contact';
 import { CloneVisitor } from '@angular/compiler/src/i18n/i18n_ast';
 import { environment } from 'src/environments/environment';
+import { AuthService } from '../login/auth.service';
 
 @Injectable({providedIn: 'root'})
 
@@ -11,16 +12,25 @@ export class ContactService
 {
     private apiServiceUrl = environment.apiBaseUrl;
     
-    constructor (private  http:HttpClient){}
+    constructor (private  http:HttpClient,private authService:AuthService){}
 
-    private createAuthorizationHeader(headers:Headers) {
-        headers.append('Authorization', 'Basic ' +
-          btoa('a20e6aca-ee83-44bc-8033-b41f3078c2b6:c199f9c8-0548-4be79655-7ef7d7bf9d20')); 
-    }
+    
+        
     
     public getContacts() : Observable<Contact[]>
     {
-        return this.http.get<Contact[]>(`${this.apiServiceUrl}api/v1/contact`)
+        var url = `${this.apiServiceUrl}api/v1/contact/`;
+        console.log(this.authService.getAccessToken());
+        const httpOptions = {
+            headers: new HttpHeaders({
+              'Authorization': `Bearer ${this.authService.getAccessToken()}`
+            })
+        };
+        console.log(httpOptions);
+        
+        
+        return this.http.get<Contact[]>(url,httpOptions);
+        
     }
 
 
@@ -31,10 +41,10 @@ export class ContactService
         var data = JSON.stringify(contact);
         const httpOptions = {
             headers: new HttpHeaders({
-              'Content-Type':  'application/json'
+              'Content-Type':  'application/json',
+              'Authorization': `Bearer ${this.authService.getAccessToken()}`
             })
         };
-
         return this.http.post<Contact>(url,data,httpOptions);
     }
     
